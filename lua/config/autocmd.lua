@@ -54,6 +54,37 @@ vim.api.nvim_create_autocmd("FileType", {
     local function refresh()
       vim.api.nvim_feedkeys(vim.keycode("<C-l>"), "m", false)
     end
+    
+vim.keymap.set("n", "i", function()
+  local old = vim.fn.getline("."):gsub("/$", "")
+  if old == "" or old == "." or old == ".." then return end
+
+  local new = vim.fn.input("Rename: ", old)
+  new = new:gsub("/+$", "")
+  if new == "" or new == old then return end
+
+  local from = vim.b.netrw_curdir .. "/" .. old
+  local to = vim.b.netrw_curdir .. "/" .. new
+
+  if vim.uv.fs_stat(to) then
+    vim.notify(new .. " already exists", vim.log.levels.WARN)
+    return
+  end
+
+  local ok, err = vim.uv.fs_rename(from, to)
+  if not ok then
+    vim.notify(tostring(err), vim.log.levels.ERROR)
+    return
+  end
+
+  -- keep any open buffer pointing at the renamed file
+  local buf = vim.fn.bufnr(from)
+  if buf ~= -1 then
+    vim.api.nvim_buf_set_name(buf, to)
+  end
+
+  refresh()
+end, { buffer = true, silent = true })
 
     vim.keymap.set("n", "o", function()
       local name = vim.fn.input("Create: ")
