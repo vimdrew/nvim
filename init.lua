@@ -20,7 +20,11 @@ require("custom.terminal")
 require("custom.statusline")
 
 --lsp--
-require("custom.lsp")
+--require("custom.lsp")
+
+
+--plugins--
+require("ide")
 
 
 
